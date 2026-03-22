@@ -3,7 +3,7 @@
 // @namespace    http://tampermonkey.net/
 // @version      1.4.1
 // @description  鼠标放在清晰度按钮上后，自动选择B站直播的最高清晰度(原画>蓝光>超清)
-// @author       You
+// @author       none
 // @match        *://live.bilibili.com/*
 // @icon         https://www.bilibili.com/favicon.ico
 // @grant        none
