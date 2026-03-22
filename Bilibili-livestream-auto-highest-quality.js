@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         B站直播自动选择最高清晰度
 // @namespace    http://tampermonkey.net/
-// @version      1.3.0
-// @description  鼠标放在清晰度按钮上后，自动选择B站直播最高清晰度
-// @author       none
+// @version      1.4.1
+// @description  鼠标放在清晰度按钮上后，自动选择B站直播的最高清晰度(原画>蓝光>超清)
+// @author       You
 // @match        *://live.bilibili.com/*
 // @icon         https://www.bilibili.com/favicon.ico
 // @grant        none
@@ -21,16 +21,20 @@
         MAX_ATTEMPTS: 60,
         INTERVAL: 1000,
         INITIAL_DELAY: 2000,
-        QUALITY_PREFERENCES: [
-            '原画',// 最高优先级
-            '蓝光',// 蓝光
-            '超清',// 超清
-            '高清',// 高清
-            '流畅',// 流畅
-            '1080P',// 1080P
-            '720P',// 720P
-            '480P'// 480P
-        ],
+        // 清晰度权重映射：数值越大优先级越高
+        // 可以根据实际需求调整顺序或添加新的关键字 (如 "4K", "HDR")
+        QUALITY_WEIGHTS: {
+            '原画': 100,
+            '蓝光': 90,
+            '超清': 80,
+            '高清': 70,
+            '流畅': 60,
+            '1080P': 50,
+            '720P': 40,
+            '480P': 30,
+            '4K': 110,// 如果有4K选项，优先级最高
+            'HDR': 105// 如果有HDR选项，优先级次高
+        },
         SELECTOR_CANDIDATES: [
             '.list-it.svelte-1n48lz1',
             '[class*="list-it"][class*="quality"]',
@@ -51,31 +55,64 @@
         }
 
         /**
-         * 按优先级查找最佳清晰度选项
+         * 计算单个元素的清晰度权重分数
+         * @param {Element} element - 清晰度选项元素
+         * @returns {number} - 权重分数，未匹配到关键字返回 -1
+         */
+        calculateQualityScore(element) {
+            const text = element.textContent.trim();
+            let maxScore = -1;
+
+            // 遍历所有定义的关键字，找出文本中包含的权重最高的那个
+            for (const [keyword, weight] of Object.entries(CONFIG.QUALITY_WEIGHTS)) {
+                if (text.includes(keyword)) {
+                    if (weight > maxScore) {
+                        maxScore = weight;
+                    }
+                }
+            }
+
+            return maxScore;
+        }
+
+        /**
+         * 查找并排序所有可用的清晰度选项，返回最佳选项
          */
         findBestQualityOption() {
+            let bestOption = null;
+            let highestScore = -1;
+
             // 遍历所有候选选择器
             for (const selector of CONFIG.SELECTOR_CANDIDATES) {
                 const elements = document.querySelectorAll(selector);
 
-                if (elements.length > 0) {
-                    // 按优先级查找
-                    for (const qualityText of CONFIG.QUALITY_PREFERENCES) {
-                        for (const element of elements) {
-                            if (element.textContent.includes(qualityText)) {
-                                console.log(`✅ 找到清晰度选项: ${element.textContent.trim()}`);
-                                return element;
-                            }
-                        }
-                    }
+                if (elements.length === 0) continue;
 
-                    // 如果按优先级没找到，返回第一个匹配的元素
-                    console.log(`🔍 找到候选元素，但未按优先级匹配`);
-                    return elements[0];
+                for (const element of elements) {
+                    const score = this.calculateQualityScore(element);
+
+                    // 如果当前元素分数更高，更新最佳选项
+                    if (score > highestScore) {
+                        highestScore = score;
+                        bestOption = element;
+                    }
                 }
             }
 
-            return null;
+            if (bestOption) {
+                console.log(`✅ 找到最佳清晰度选项: "${bestOption.textContent.trim()}" (权重: ${highestScore})`);
+            } else {
+                // 如果没有匹配到任何关键字，尝试返回第一个找到的候选元素作为备选
+                for (const selector of CONFIG.SELECTOR_CANDIDATES) {
+                    const firstElement = document.querySelector(selector);
+                    if (firstElement) {
+                        console.log(`⚠️ 未匹配到已知清晰度关键字，默认选择: "${firstElement.textContent.trim()}"`);
+                        return firstElement;
+                    }
+                }
+            }
+
+            return bestOption;
         }
 
         /**
@@ -149,8 +186,8 @@
                             if (addedNode.nodeType === Node.ELEMENT_NODE) {
                                 // 检查新增节点是否包含清晰度相关的类名
                                 const hasQualityRelatedClass = CONFIG.SELECTOR_CANDIDATES.some(
-                                    selector => addedNode.matches?.(selector) || 
-                                    addedNode.querySelector?.(selector)
+                                    selector => addedNode.matches?.(selector) ||
+                                             addedNode.querySelector?.(selector)
                                 );
 
                                 if (hasQualityRelatedClass) {
@@ -192,6 +229,7 @@
 
             console.log('🚀 B站直播清晰度自动选择脚本启动');
             console.log(`📋 配置: 最大尝试${CONFIG.MAX_ATTEMPTS}次, 间隔${CONFIG.INTERVAL}ms`);
+            console.log(`📊 清晰度优先级: ${Object.keys(CONFIG.QUALITY_WEIGHTS).sort((a,b) => CONFIG.QUALITY_WEIGHTS[b] - CONFIG.QUALITY_WEIGHTS[a]).join(' > ')}`);
 
             // 设置DOM观察器
             this.setupDOMObserver();
