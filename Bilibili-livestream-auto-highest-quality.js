@@ -3,7 +3,7 @@
 // @namespace    http://tampermonkey.net/
 // @version      1.3.0
 // @description  鼠标放在清晰度按钮上后，自动选择B站直播最高清晰度
-// @author       
+// @author       none
 // @match        *://live.bilibili.com/*
 // @icon         https://www.bilibili.com/favicon.ico
 // @grant        none
@@ -22,14 +22,14 @@
         INTERVAL: 1000,
         INITIAL_DELAY: 2000,
         QUALITY_PREFERENCES: [
-            '原画',   // 最高优先级
-            '蓝光',   // 蓝光
-            '超清',   // 超清
-            '高清',   // 高清
-            '流畅',   // 流畅
-            '1080P',  // 1080P
-            '720P',   // 720P
-            '480P'    // 480P
+            '原画',// 最高优先级
+            '蓝光',// 蓝光
+            '超清',// 超清
+            '高清',// 高清
+            '流畅',// 流畅
+            '1080P',// 1080P
+            '720P',// 720P
+            '480P'// 480P
         ],
         SELECTOR_CANDIDATES: [
             '.list-it.svelte-1n48lz1',
@@ -57,7 +57,7 @@
             // 遍历所有候选选择器
             for (const selector of CONFIG.SELECTOR_CANDIDATES) {
                 const elements = document.querySelectorAll(selector);
-                
+
                 if (elements.length > 0) {
                     // 按优先级查找
                     for (const qualityText of CONFIG.QUALITY_PREFERENCES) {
@@ -68,13 +68,13 @@
                             }
                         }
                     }
-                    
+
                     // 如果按优先级没找到，返回第一个匹配的元素
                     console.log(`🔍 找到候选元素，但未按优先级匹配`);
                     return elements[0];
                 }
             }
-            
+
             return null;
         }
 
@@ -83,7 +83,7 @@
          */
         clickQualityOption(option) {
             if (!option) return false;
-            
+
             try {
                 // 模拟真实点击事件
                 const clickEvent = new MouseEvent('click', {
@@ -91,7 +91,7 @@
                     cancelable: true,
                     view: window
                 });
-                
+
                 option.dispatchEvent(clickEvent);
                 console.log(`✅ 成功选择清晰度: ${option.textContent.trim()}`);
                 return true;
@@ -113,7 +113,7 @@
 
             try {
                 const qualityOption = this.findBestQualityOption();
-                
+
                 if (qualityOption) {
                     if (this.clickQualityOption(qualityOption)) {
                         console.log('🎉 清晰度选择完成');
@@ -142,7 +142,7 @@
 
             this.observer = new MutationObserver((mutations) => {
                 let shouldCheck = false;
-                
+
                 for (const mutation of mutations) {
                     if (mutation.type === 'childList') {
                         for (const addedNode of mutation.addedNodes) {
@@ -150,9 +150,9 @@
                                 // 检查新增节点是否包含清晰度相关的类名
                                 const hasQualityRelatedClass = CONFIG.SELECTOR_CANDIDATES.some(
                                     selector => addedNode.matches?.(selector) || 
-                                             addedNode.querySelector?.(selector)
+                                    addedNode.querySelector?.(selector)
                                 );
-                                
+
                                 if (hasQualityRelatedClass) {
                                     shouldCheck = true;
                                     break;
@@ -160,7 +160,7 @@
                             }
                         }
                     }
-                    
+
                     if (shouldCheck) break;
                 }
 
@@ -186,16 +186,16 @@
          */
         start() {
             if (this.isRunning) return;
-            
+
             this.isRunning = true;
             this.attempts = 0;
-            
+
             console.log('🚀 B站直播清晰度自动选择脚本启动');
             console.log(`📋 配置: 最大尝试${CONFIG.MAX_ATTEMPTS}次, 间隔${CONFIG.INTERVAL}ms`);
-            
+
             // 设置DOM观察器
             this.setupDOMObserver();
-            
+
             // 开始检测
             setTimeout(() => {
                 if (this.isRunning) {
@@ -227,7 +227,7 @@
 
     // 创建全局实例
     const qualitySelector = new QualitySelector();
-    
+
     // 页面可见性变化时重新启动检测
     document.addEventListener('visibilitychange', () => {
         if (!document.hidden && !qualitySelector.isRunning) {
