@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         B站直播自动选择1080P原画清晰度
 // @namespace    http://tampermonkey.net/
-// @version      1.2.1
+// @version      1.3
 // @description  鼠标放在清晰度按钮上后，自动选择B站直播的1080P原画清晰度
 // @author       none
 // @match        *://live.bilibili.com/*
