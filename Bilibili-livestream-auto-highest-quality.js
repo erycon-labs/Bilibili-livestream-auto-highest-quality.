@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         Bilibili-livestream-auto-highest-quality.
+// @name         B站直播自动选择最高清晰度
 // @namespace    http://tampermonkey.net/
 // @version      1.3.0
-// @description  鼠标放在清晰度按钮上后，自动选择B站直播的1080P原画清晰度
+// @description  鼠标放在清晰度按钮上后，自动选择B站直播最高清晰度
 // @author       
 // @match        *://live.bilibili.com/*
 // @icon         https://www.bilibili.com/favicon.ico
